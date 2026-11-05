@@ -553,16 +553,14 @@ button{font-family:inherit;color:var(--ink);cursor:pointer;}
       'min-height:40px;padding:8px 12px;border-radius:999px;border:1.5px solid rgba(232,179,75,.85);'+
       'background:rgba(10,14,12,.88);color:#e8d9ae;font-size:13px;font-weight:700;'+
       'font-family:system-ui,-apple-system,"Segoe UI",sans-serif;touch-action:none;display:none;';
-    var lastFire=0;
+    var pdEcho=false; // exactly-once keying: a click that follows a counted pointerdown is that tap's echo and is consumed, however late it lands (a saturated webview delivered one echo 14 s after its press in testing — no time window is safe); a click with NO preceding pointerdown (keyboard / programmatic) counts on its own, and any later physical tap always brings its own pointerdown first, so the flag can never eat a real tap
     function bump(){
-      var now=(window.performance&&performance.now)? performance.now() : Date.now();
-      if(now-lastFire<80) return; lastFire=now;
       D.taps++; probe.textContent='tap test · '+D.taps;
       probe.style.background='rgba(90,64,14,.92)';
       setTimeout(function(){ probe.style.background='rgba(10,14,12,.88)'; },160);
     }
-    probe.addEventListener('pointerdown',function(e){ if(e&&e.preventDefault) e.preventDefault(); bump(); });
-    probe.addEventListener('click',function(){ var now=(window.performance&&performance.now)? performance.now() : Date.now(); if(now-lastFire>500) bump(); });
+    probe.addEventListener('pointerdown',function(e){ if(e&&e.preventDefault) e.preventDefault(); pdEcho=true; bump(); });
+    probe.addEventListener('click',function(){ if(!pdEcho) bump(); pdEcho=false; });
     document.body.appendChild(probe);
     var banner=document.createElement('div');
     banner.id='diagBanner';
@@ -6620,7 +6618,7 @@ function animateHumans(dt){ var now=performance.now()*.001;
     var wx=h.position.x, wz=h.position.z;
     if(h.parent&&h.parent!==scene){ h.getWorldPosition(_npcWV); wx=_npcWV.x; wz=_npcWV.z; } // hoisted temp (was a fresh Vector3 per figure per frame — GC churn on a phone reads as stutter)
     var gy=groundHeight(wx,wz)-(h.parent&&h.parent!==scene? h.parent.position.y:0);
-    h.position.y=gy+Math.abs(Math.cos(u.phase))*.05*amp*(1-bc)-bc*.05-(u.seated? .48:0)-(u.warrior&&amp<.1? .06:0); // a warrior's idle is a crouch, not a stand
+    h.position.y=gy+(h===cook? jumpY:0)+Math.abs(Math.cos(u.phase))*.05*amp*(1-bc)-bc*.05-(u.seated? .48:0)-(u.warrior&&amp<.1? .06:0); // a warrior's idle is a crouch, not a stand — RESCUE FIX 2026-11-05 (owner: "the screen jumps but not the character"): this terrain line is the LAST word on every figure's y and it carried no jumpY, so it reset Cook to the ground every frame after the camera (and the animate() sync) had lifted him. Cook — and only Cook — now adds jumpY here.
     /* PASS A (item 5) — REST POSE: on a 'rest' work spot the figure lies
        back onto his bedroll. restCur eases toward its goal at ~1.4/s, so
        lying down and RISING both blend over ~1 s — never a snap. Pitched
@@ -7147,7 +7145,7 @@ function animate(){ requestAnimationFrame(animate); var dt=Math.min(clock.getDel
   TPON=!!(S.cam3p&&!S.inside&&S.started);
   if(cook){ var cu=cook.userData; // Cook IS the player: position, heading, gait, bow
     cu.heading=player.yaw+Math.PI; cu.extSpd=Math.hypot(velX,velZ); cu.bowT=S.bowed?1:0; // Cook's gait reads the player's REAL ground speed
-    cook.position.x=player.x; cook.position.z=player.z; cook.visible=TPON;
+    cook.position.x=player.x; cook.position.z=player.z; cook.position.y=(S.inside? INT_Y : groundHeight(player.x,player.z))+jumpY; cook.visible=TPON; // RESCUE FIX 2026-11-05 (owner: "the screen jumps but not the character"): this sync never set y — the camera rig took jumpY but the body stayed at its build height, so Cook never left the ground in 3P and never followed terrain. y is now ground + jumpY, the same ground the camera block computes below.
     ckCut.visible=TPON&&S.weapon==='cut'&&!ukePlay.on; ckFlint.visible=TPON&&S.weapon==='flint'&&!ukePlay.on;
     ckBlow.visible=TPON&&S.weapon==='dart'&&!ukePlay.on; ckLamp.visible=TPON&&S.lantern; ckUke.visible=TPON&&ukePlay.on; }
   var _fhT=performance.now(); animateHumans(dt); FP.sys.humans+=performance.now()-_fhT; // FRAME PROBE: the human system, timed at its real call site
@@ -8064,7 +8062,7 @@ function runPassB2Test(){ /* PASS B2 (environment visuals — owner's
        puddle binding is asserted too: ZERO Cook meshes may cast a
        shadow-map shadow (his ≈.4 m lantern self-projection), while the
        lantern light itself keeps castShadow for the world's shadows. */
-    cook.position.x=player.x; cook.position.z=player.z; // the same sync animate() performs every frame — without it a test called from the title screen would measure Cook at his build position, not the player's
+    cook.position.x=player.x; cook.position.z=player.z; cook.position.y=(S.inside? INT_Y : groundHeight(player.x,player.z))+jumpY; // the same sync animate() performs every frame — without it a test called from the title screen would measure Cook at his build position, not the player's
     updatePatches();
     var pScale=-1, ca=creaturePatches.instanceMatrix.array;
     for(var ci5=0;ci5<16;ci5++){ if(Math.hypot(ca[ci5*16+12]-player.x, ca[ci5*16+14]-player.z)<.05){ pScale=ca[ci5*16]; break; } }
