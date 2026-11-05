@@ -73,9 +73,9 @@ button{font-family:inherit;color:var(--ink);cursor:pointer;}
 #banner h2{margin:0;font-size:clamp(20px,4.2vw,34px);text-shadow:0 2px 14px #000;font-weight:600;}
 #banner p{margin:6px 0 0;font-size:clamp(13px,2.2vw,16.5px);color:var(--dim);text-shadow:0 1px 8px #000;line-height:1.45;}
 #caption{position:absolute;left:50%;bottom:calc(var(--safe-b) + 118px);transform:translateX(-50%);width:min(72vw,560px);text-align:center;
-  font-size:clamp(14px,2.4vw,18px);font-style:italic;text-shadow:0 1px 10px #000,0 0 3px #000;line-height:1.45;pointer-events:none;
+  font-size:clamp(14px,2.4vw,18px);font-style:italic;text-shadow:0 1px 10px #000,0 0 3px #000;line-height:1.45;pointer-events:auto;cursor:pointer;
   background:rgba(6,10,8,.72);border:1px solid rgba(232,179,75,.25);border-radius:12px;padding:10px 16px;}
-#caption:empty{background:none;border:none;padding:0;}
+#caption:empty{background:none;border:none;padding:0;pointer-events:none;}
 #caption .who{color:var(--gold);font-style:normal;font-weight:bold;}
 #caption .capPg{color:var(--gold);font-style:normal;font-size:.78em;opacity:.85;}
 #banner{background:rgba(6,10,8,.45);border-radius:14px;padding:10px 18px;} /* PASS A (item 11): narrative text sits in a dim panel inside the HUD-safe zone (72vw centred — clear of the right-hand button column and the hotbar) instead of bare over bright gameplay, where the recording showed it cut off behind Journal/Lantern */
@@ -136,6 +136,8 @@ button{font-family:inherit;color:var(--ink);cursor:pointer;}
    tap, never the start of a pan. */
 #titleScr{flex-direction:column;gap:10px;}
 #titleScr .sheet{flex:1 1 auto;min-height:0;max-height:none;}
+#titleActions{flex:none;width:100%;max-width:680px;}
+#titleActions .bigbtn{margin-top:0;min-height:58px;font-size:19px;letter-spacing:.02em;}
 #titleSettings{flex:none;width:100%;max-width:680px;background:var(--panel2);
   border:1px solid rgba(232,179,75,.4);border-radius:16px;
   padding:10px clamp(18px,4vw,34px) 12px;touch-action:none;}
@@ -148,6 +150,11 @@ button{font-family:inherit;color:var(--ink);cursor:pointer;}
   #titleSettings .setGroup{flex:1 1 0;min-width:0;}
   #titleSettings .setGroup .lbl{margin-top:0;}
   #qualitySeg button{flex:1 1 45%;}
+  /* RECORDING FIX PASS (2026-11-05): with Come ashore now in its own fixed bar, the column (sheet + settings + actions) overflowed a 430 px-high landscape screen — the button sat 38 px BELOW the fold and the sheet was crushed shut. In short landscape the quality buttons drop their long descriptions (the Now: line under them still states the applied tier in words) and go four-across: the settings panel falls to ~115 px and every element fits. */
+  #titleSettings{padding:8px 12px 9px;}
+  #qualitySeg button{flex:1 1 22%;}
+  #qualitySeg button small{display:none;}
+  #titleActions .bigbtn{min-height:50px;}
 }
 @media (orientation:portrait){
   /* DIAGNOSTIC PASS (2026-11-05): in portrait the four quality buttons
@@ -187,7 +194,7 @@ button{font-family:inherit;color:var(--ink);cursor:pointer;}
 #dreamFx{position:fixed;inset:0;z-index:4;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,transparent 30%,rgba(20,0,40,.85));transition:opacity 1.2s;}
 /* single merged post pass: vignette + film grain in one layer, no bloom stack */
 #postFx{position:fixed;inset:-48px;z-index:3;pointer-events:none;box-shadow:inset 0 0 22vmax rgba(0,0,0,.62);
-  background-repeat:repeat;opacity:.5;animation:grainShift .5s steps(2) infinite alternate;will-change:transform;}
+  background-repeat:repeat;opacity:.15;animation:grainShift .5s steps(2) infinite alternate;will-change:transform;}
 @keyframes grainShift{from{transform:translate(0,0);}to{transform:translate(38px,22px);}} /* FRAME PASS: the grain used to animate background-position — a PAINT of the full-screen layer twice a second on the phone's compositor. It now animates transform on an oversized layer (inset −48px so the shift never bares an edge): the compositor moves a cached texture instead of repainting it. Same grain, same vignette (the 22vmax inset shadow dwarfs the 48px oversize). */
 #pulseFx{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,transparent 52%,rgba(64,6,0,.6) 100%);}
 /* spyglass (N2): a real circular glass over the world — the scouting verb made visible */
@@ -351,7 +358,6 @@ button{font-family:inherit;color:var(--ink);cursor:pointer;}
     <p class="note">A chapter opens only when the one before it is complete — and a chapter is complete only when <b>every kiʻi of that chapter</b> has been gathered from its shrine. Later chapters are named here honestly: locked until earned, and built in later growth passes.</p>
     <p class="note">Render scale is how much of your screen's sharpness the game actually draws. The middle two trade a little sharpness for smoothness on their own when the frame rate dips, and take it back when there is headroom. Graphics quality and controller rumble are set in the fixed panel below this sheet — they apply the moment you tap.</p>
     <p class="note">Play holding the phone <b>sideways</b>. Left thumb moves, right thumb looks. A paired PlayStation or Xbox controller works too — prompts follow the pad family. Headphones recommended.</p>
-    <button class="bigbtn" id="startBtn">⚓ Come ashore</button>
     <button class="bigbtn ghost" id="arBtnTitle">📷 AR Procession — they cross your real space</button>
     <p class="note">AR Procession is a separate mode: the Huakaʻi Pō crosses the room, yard or street in front of your own camera, and the three rules are performed by your real body. It can be played before or after the shore story.</p>
   </div>
@@ -375,6 +381,7 @@ button{font-family:inherit;color:var(--ink);cursor:pointer;}
       <p class="nowLine" id="rNow">Now: Low</p>
     </div>
   </div>
+  <div id="titleActions"><button class="bigbtn" id="startBtn">⚓ Come ashore</button></div>
 </div>
 
 <!-- JOURNAL -->
@@ -723,10 +730,16 @@ function caption(who,text,ms,src){ var el=document.getElementById('caption');
   S._duckUntil=performance.now()+(ms||5200); // dialogue ducks the atmosphere (Part B rule)
   clearTimeout(caption._t); clearTimeout(caption._pg);
   var per=Math.max(2800, Math.round((ms||5200)/pages.length)), pi=0;
-  function showPage(){ el.innerHTML=pages[pi];
+  function showPage(){ caption._shown=pi; el.innerHTML=pages[pi];
     if(pi<pages.length-1){ pi++; caption._pg=setTimeout(showPage, per); }
     else if(ms!==0) caption._t=setTimeout(function(){ el.innerHTML=''; caption._src=null; }, per); }
+  caption._adv=function(){ clearTimeout(caption._pg); clearTimeout(caption._t); // OWNER ORDER 2026-11-05: notifications must be tappable away — a tap advances the page, a tap on the last page dismisses outright; nobody waits out a timer
+    if(caption._shown<pages.length-1){ pi=caption._shown+1; showPage(); }
+    else { el.innerHTML=''; caption._src=null; } };
   showPage(); }
+/* OWNER ORDER 2026-11-05 — tap-to-dismiss: captions advance/dismiss on tap, toasts dismiss on tap. stopPropagation keeps the tap out of the look controls underneath. */
+document.getElementById('caption').addEventListener('pointerdown',function(e){ e.stopPropagation(); if(caption._adv) caption._adv(); });
+document.getElementById('toast').addEventListener('pointerdown',function(e){ e.stopPropagation(); clearTimeout(toast._t); this.style.display='none'; });
 function banner(t,sub,ms){ document.getElementById('bannerTitle').textContent=t||'';
   document.getElementById('bannerSub').textContent=sub||'';
   clearTimeout(banner._t); if(ms!==0) banner._t=setTimeout(function(){banner('','',0);}, ms||4200); }
@@ -2840,64 +2853,105 @@ shrine.add(batchMesh([
   xform(new THREE.BoxGeometry(3.4,.7,3.4), 0,.35,0),
   xform(new THREE.BoxGeometry(1.1,1.6,1.1), 0,1.5,0)], stoneMat, true, false));
 var kii=new THREE.Group();
-/* KIʻI REBUILT (owner order — "the tiki must actually look like a tiki",
-   from genuine depictions): the old figure was the named failure — a
-   cylinder body, a BOX head, a flat slab for a headdress and two
-   glowing teal marbles for eyes: a cartoon idol. This is a carved
-   kiʻi akua built from the documented form (Reference Pack §E's carved
-   kiʻi shelf — the British Museum / Bishop Museum Kū figures): the
-   MASSIVE head is ≈ a third of the whole figure and carries the fierce
-   face — heavy brow shelf, glaring inset eyes (bone-white inlay, dark
-   pupil — the shell-inlay read, NOT a glow), flaring nostrils, an open
-   mouth with bared teeth and the tongue out; a RIBBED CREST sweeps up
-   and back from the crown (the Kū headdress form — this shrine's ward
-   is Kūpale, Kū's protection, so the figure is Kū's, not a generic
-   idol); a muscular lathe torso with pectoral mass, arms bent with the
-   hands MEETING AT THE BELLY in the classic stance, flexed legs, carved
-   groove rings at the torso, and a weathered grey-brown patina in the
-   wood (darker, rougher, heavier bump than the old honey tint).
-   NAMED LIMIT: the study shelf's photographs could not be opened from
-   this build session — the form is built from the pack's documented
-   iconography and the canonical museum descriptions, and the owner's
-   eye is the check, as with the people gate. */
-var kiiMat=new THREE.MeshStandardMaterial({map:wdInst, bumpMap:wdInst, bumpScale:.1, color:0x86643f, roughness:.95});
-var kiiDark=new THREE.MeshStandardMaterial({map:wdInst, color:0x3a281a, roughness:1});
+/* KIʻI REBUILT FROM MUSEUM PHOTOGRAPHS (2026-11-05 — closes the
+   genuine-image study R-KII-1 was waiting on; full study: the goal's
+   files, "Kiʻi Museum Reference Study"). The prior build's own header
+   admitted its study-shelf photographs "could not be opened from this
+   build session". This pass OPENED and read the museums' own
+   photographs and object records: the British Museum's great Kū
+   temple figure Oc1839,0426.8 (BM photograph AN00035830) and the
+   Bishop Museum's kiʻi at the centre of Kini Ke Kua (Bishop Museum
+   photograph), with the Museum of New Zealand Te Papa Tongarewa and
+   the National Museum of Australia object records for the eye inlay,
+   and the National Museum of Ireland / National Museum of Scotland
+   records for stance and carving. What changed, difference by
+   difference (old → new):
+   K-1 CREST: a back slab + seven thin ribs, head sides bare → a
+     helmet of locks: knob rows over the crown (the BM Kū's hair of
+     stylised rounded forms), stacked-lock falls descending BOTH sides
+     of the face to the jaw, the slab + thickened ribs kept behind.
+   K-2 MOUTH: a flat .27-wide dark box, two smooth bone strips, a
+     tongue box sticking out → a .40-wide open mouth: up-curling
+     corners, three stacked groove ridges for each lip, NINE
+     individually cut upper teeth + seven lower (was two strips), the
+     tongue a rounded mass INSIDE the mouth, jaw thrust forward.
+   K-3 EYES: round bone spheres sitting ON the face, centred pupils →
+     pearl-shell OVALS sunk into the head under a heavy brow mass,
+     set diagonally (inner ends dipped toward the nose — the NMA
+     record), small dark seed pupils: a glare from shadow, not marbles.
+   K-4 STANCE: straight legs, hands meeting at the belly → the Bishop
+     Museum warrior pose: knees bent, calves flexed, arms hanging
+     tight to the body, fists clenched at the BACK of the thighs.
+   K-5 SURFACE: three dark torus rings around the torso → rings GONE
+     (no museum figure wears them); the torso lathe drops 14 → 9
+     facets for the adze-cut read; a carved navel diamond added.
+   K-6 PROPORTIONS: head + crest ≈ 35% of the figure → ≈ 38–40%
+     (head sphere .27 → .29, shoulders widened, the crouch lowers
+     the pelvis .66 → .60): the stocky museum read.
+   K-7 The carved male organ of the genuine images is present (its
+     absence was held against the Bishop figure's authenticity;
+     missionaries cut the Scotland figure's away). Plain, small, wood.
+   K-8 WOOD: honey-brown 0x86643f → dark aged 0x63482a, the near-black
+     brown of the BM photograph / deep red-brown of the Bishop one.
+   Both shrine figures share this ONE construction (kii2 is the clone
+   at the heiau) — the rebuild reaches both, identically. NOT verified
+   this session: Metropolitan Museum / Smithsonian Hawaiian wooden-
+   kiʻi object pages (their surfaced figures are other islands'); the
+   study says so plainly and rests on the sources above. */
+var kiiMat=new THREE.MeshStandardMaterial({map:wdInst, bumpMap:wdInst, bumpScale:.12, color:0x63482a, roughness:.97});
+var kiiDark=new THREE.MeshStandardMaterial({map:wdInst, color:0x33241a, roughness:1});
 var kiiBone=new THREE.MeshStandardMaterial({color:0xd8cbb0, roughness:.7});
-(function(){ var main=[], dark=[], bone=[];
-  // legs in the flexed stance, feet planted
-  [-1,1].forEach(function(sx){ main.push(xform(new THREE.CylinderGeometry(.085,.118,.52,9), sx*.14,.30,0, 0,0,-sx*.05));
-    main.push(xform(new THREE.BoxGeometry(.15,.07,.3), sx*.15,.035,.04)); });
-  main.push(xform(new THREE.BoxGeometry(.46,.22,.3), 0,.66,0)); // pelvis
+var kiiShell=new THREE.MeshStandardMaterial({color:0xe9e2cd, roughness:.32});
+(function(){ var main=[], dark=[], bone=[], shell=[];
+  // LEGS — the warrior crouch: thigh forward to the knee, shin back
+  [-1,1].forEach(function(sx){
+    main.push(xform(new THREE.CylinderGeometry(.088,.108,.30,9), sx*.15,.45,.04, -.45,0,0)); // thigh, knee carried forward
+    main.push(xform(new THREE.CylinderGeometry(.062,.082,.32,9), sx*.155,.20,-.01, .35,0,0)); // shin, ankle back under the hip
+    main.push(xform(new THREE.SphereGeometry(.085,8,7), sx*.16,.27,-.075, 0,0,0, .8,1.1,.9)); // the flexed calf
+    main.push(xform(new THREE.BoxGeometry(.15,.07,.32), sx*.16,.035,.03)); }); // feet planted
+  main.push(xform(new THREE.BoxGeometry(.46,.22,.30), 0,.60,0)); // pelvis, lowered by the crouch
+  main.push(xform(new THREE.CylinderGeometry(.028,.036,.13,8), 0,.52,.175, 1.05,0,0)); // K-7: the carved organ
+  main.push(xform(new THREE.SphereGeometry(.033,8,7), 0,.462,.208));
   var torsoPts=[[.01,0],[.20,.01],[.235,.12],[.19,.30],[.245,.44],[.205,.55],[.10,.62]].map(function(p){ return new THREE.Vector2(p[0],p[1]); });
-  main.push(xform(new THREE.LatheGeometry(torsoPts,14), 0,.77,0, 0,0,0, 1.15,1,.8)); // the muscular torso, turned not tubed
-  [-1,1].forEach(function(sx){ var pec=new THREE.SphereGeometry(.09,9,7); main.push(xform(pec, sx*.10,1.22,.15, 0,0,0, 1,.8,.5)); }); // pectoral mass
-  [-1,1].forEach(function(sx){ main.push(xform(new THREE.CylinderGeometry(.068,.06,.36,8), sx*.315,1.18,.01, 0,0,sx*.5)); // upper arms, angled down and out
-    main.push(xform(new THREE.CylinderGeometry(.058,.052,.3,8), sx*.19,1.0,.14, 1.1,0,0)); // forearms carried forward
-    main.push(xform(new THREE.SphereGeometry(.075,8,7), sx*.065,.95,.26)); }); // hands meeting at the belly
-  main.push(xform(new THREE.CylinderGeometry(.095,.105,.12,9), 0,1.42,0)); // neck
-  // THE HEAD — a third of the figure, with the crest above it
-  main.push(xform(new THREE.SphereGeometry(.27,16,13), 0,1.63,0, 0,0,0, 1,1.12,1.02));
-  main.push(xform(new THREE.BoxGeometry(.34,.17,.3), 0,1.42,.04)); // the jaw mass
-  main.push(xform(new THREE.BoxGeometry(.42,.07,.12), 0,1.72,.235, .15,0,0)); // brow shelf
-  main.push(xform(new THREE.BoxGeometry(.095,.17,.09), 0,1.60,.285)); // nose
-  [-1,1].forEach(function(sx){ main.push(xform(new THREE.SphereGeometry(.038,7,6), sx*.06,1.53,.30)); }); // flaring nostril wings
-  main.push(xform(new THREE.BoxGeometry(.08,.55,.36), 0,1.80,-.20, .30,0,0)); // crest slab sweeping back
-  for(var rk=0;rk<7;rk++){ var ra=rk/6; // the RIBBED crest: seven carved ribs fanning up and back over the slab
-    main.push(xform(new THREE.BoxGeometry(.065,.30,.045), 0, 1.90+.14*Math.sin(ra*Math.PI*.75), .06-rk*.062, -.15-rk*.13,0,0)); }
-  // carved detail in the dark wood: mouth cavity, torso groove rings
-  dark.push(xform(new THREE.BoxGeometry(.27,.11,.05), 0,1.44,.265));
-  [.95,1.08,1.21].forEach(function(y){ dark.push(xform(new THREE.TorusGeometry(.215,.012,6,20), 0,y,0, Math.PI/2,0,0, 1.15,.8,1)); });
-  // bone inlay: the glaring eyes and the bared teeth
-  [-1,1].forEach(function(sx){ bone.push(xform(new THREE.SphereGeometry(.046,8,7), sx*.105,1.68,.245)); });
-  bone.push(xform(new THREE.BoxGeometry(.23,.04,.02), 0,1.475,.295));
-  bone.push(xform(new THREE.BoxGeometry(.20,.03,.02), 0,1.415,.29));
+  main.push(xform(new THREE.LatheGeometry(torsoPts,9), 0,.71,0, 0,0,0, 1.22,1,.82)); // K-5: nine facets, no rings
+  [-1,1].forEach(function(sx){ var pec=new THREE.SphereGeometry(.09,9,7); main.push(xform(pec, sx*.105,1.16,.16, 0,0,0, 1,.8,.5)); }); // pectoral mass
+  dark.push(xform(new THREE.BoxGeometry(.05,.07,.02), 0,.90,.178, 0,0,.78)); // the carved navel diamond
+  // ARMS — tight to the body, fists at the back of the thighs (K-4)
+  [-1,1].forEach(function(sx){ main.push(xform(new THREE.CylinderGeometry(.06,.068,.34,8), sx*.335,1.06,-.01, .10,0,sx*.16)); // upper arms, near-vertical
+    main.push(xform(new THREE.CylinderGeometry(.048,.055,.28,8), sx*.305,.795,-.065, -.38,0,0)); // forearms angled back
+    main.push(xform(new THREE.SphereGeometry(.07,8,7), sx*.29,.63,-.14, 0,0,0, 1,1.15,.9)); }); // the clenched fists
+  main.push(xform(new THREE.CylinderGeometry(.095,.105,.12,9), 0,1.36,0)); // neck
+  // THE HEAD — enlarged (K-6), jaw thrust forward (K-2)
+  main.push(xform(new THREE.SphereGeometry(.29,16,13), 0,1.60,0, 0,0,0, 1,1.10,1.0));
+  main.push(xform(new THREE.BoxGeometry(.36,.18,.32), 0,1.36,.07)); // the jaw mass
+  main.push(xform(new THREE.SphereGeometry(.20,12,9), 0,1.70,.155, 0,0,0, 1.28,.42,.55)); // K-3: the heavy brow mass overhanging the eyes
+  main.push(xform(new THREE.BoxGeometry(.10,.18,.10), 0,1.545,.275)); // nose
+  [-1,1].forEach(function(sx){ main.push(xform(new THREE.SphereGeometry(.04,7,6), sx*.065,1.475,.29)); }); // flaring nostril wings
+  // THE CREST — a helmet of locks (K-1)
+  main.push(xform(new THREE.BoxGeometry(.09,.55,.38), 0,1.82,-.21, .30,0,0)); // crest slab sweeping back
+  for(var rk=0;rk<7;rk++){ var ra=rk/6; // the ribbed back of the crest, thickened
+    main.push(xform(new THREE.BoxGeometry(.075,.30,.05), 0, 1.90+.14*Math.sin(ra*Math.PI*.75), .06-rk*.062, -.15-rk*.13,0,0)); }
+  [[-.16,1.905,.10],[0,1.945,.10],[.16,1.905,.10],[-.17,1.93,.015],[0,1.975,.015],[.17,1.93,.015],[-.16,1.905,-.07],[0,1.945,-.07],[.16,1.905,-.07]].forEach(function(kp){
+    main.push(xform(new THREE.SphereGeometry(.05,8,7), kp[0],kp[1],kp[2], 0,0,0, 1,1.05,1)); }); // crown lock rows
+  [-1,1].forEach(function(sx){ [1.80,1.655,1.51,1.365].forEach(function(ly){
+    main.push(xform(new THREE.SphereGeometry(.056,8,7), sx*.288,ly,-.02, 0,0,0, .72,1.08,.92)); }); }); // the side falls, down to the jaw
+  // THE MOUTH — wide, grooved, up-curled corners (K-2)
+  dark.push(xform(new THREE.BoxGeometry(.40,.13,.06), 0,1.40,.235)); // the open cavity
+  [-1,1].forEach(function(sx){ dark.push(xform(new THREE.BoxGeometry(.07,.10,.05), sx*.20,1.435,.215, 0,0,-sx*.5)); }); // the up-curling corners
+  [[1.478,.250,.44],[1.498,.241,.415],[1.515,.232,.385]].forEach(function(lg){ main.push(xform(new THREE.BoxGeometry(lg[2],.022,.03), 0,lg[0],lg[1], -.06,0,0)); }); // upper lip — three stacked grooves
+  [[1.322,.248,.42],[1.302,.240,.395],[1.287,.231,.365]].forEach(function(lg){ main.push(xform(new THREE.BoxGeometry(lg[2],.022,.03), 0,lg[0],lg[1], .06,0,0)); }); // lower lip — three stacked grooves
+  for(var td=0;td<9;td++){ bone.push(xform(new THREE.BoxGeometry(.032,.046,.018), -.144+td*.036,1.450,.272)); } // upper teeth — nine, individually cut
+  for(var td2=0;td2<7;td2++){ bone.push(xform(new THREE.BoxGeometry(.030,.032,.016), -.108+td2*.036,1.352,.268)); } // lower teeth — seven
+  // THE EYES — pearl-shell ovals, diagonal, sunk under the brow (K-3)
+  [-1,1].forEach(function(sx){ shell.push(xform(new THREE.SphereGeometry(.055,10,8), sx*.105,1.635,.243, 0,sx*.15,-sx*.45, 1.5,.62,.35)); });
   kii.add(batchMesh(main, kiiMat, true, false));
   kii.add(batchMesh(dark, kiiDark, false, false));
   kii.add(batchMesh(bone, kiiBone, false, false));
-  [-1,1].forEach(function(sx){ var pup=new THREE.Mesh(new THREE.SphereGeometry(.02,6,6), kiiDark);
-    pup.position.set(sx*.105,1.68,.283); kii.add(pup); }); // dark pupils in the inlay — a stare, not a glow
-  var tongue=new THREE.Mesh(new THREE.BoxGeometry(.10,.025,.13), new THREE.MeshStandardMaterial({color:0x6e2f22, roughness:.8}));
-  tongue.position.set(0,1.42,.34); tongue.rotation.x=.35; kii.add(tongue); // the tongue, out — the whetero of the genuine carvings
+  kii.add(batchMesh(shell, kiiShell, false, false));
+  [-1,1].forEach(function(sx){ var pup=new THREE.Mesh(new THREE.SphereGeometry(.017,6,6), kiiDark);
+    pup.position.set(sx*.10,1.642,.262); kii.add(pup); }); // the dark seed pupil in each inlay
+  var tongue=new THREE.Mesh(new THREE.SphereGeometry(.07,10,8), new THREE.MeshStandardMaterial({color:0x6e2f22, roughness:.8}));
+  tongue.scale.set(1.25,.45,.8); tongue.position.set(0,1.378,.222); kii.add(tongue); // the tongue mass INSIDE the mouth
 })();
 kii.position.y=2.3; shrine.add(kii);
 var shrineGlow=new THREE.PointLight(0x57d9c5,0,12,2); shrineGlow.position.set(0,2.6,0); shrine.add(shrineGlow);
@@ -3161,14 +3215,14 @@ scene.add(volcano);
    120 s of event against 165 s of quiet, so a player in a normal
    session WILL stand in one. VOLC.t starts at 100 — the first glow
    builds about a minute into the night. */
-var VOLC={t:100, cycle:285, glow:.16, flow:0, phase:'quiet', rumbleT:0};
+var VOLC={t:100, cycle:200, glow:.16, flow:0, phase:'quiet', rumbleT:0, erupted:false}; // cycle 285 → 200 s (owner, 2026-11-05 — "volcano has no lava flow down its slopes"): the quiet shrank 165 → 80 s so the flow is something a player actually witnesses, and once she has erupted her channels stay ember-lit (erupted) instead of vanishing between cycles
 var _plumeLit=new THREE.Color(0xb06a44), _plumeCold=new THREE.Color(0x6a7076);
 function updateVolcano(dt){ VOLC.t=(VOLC.t+dt)%VOLC.cycle; var t=VOLC.t, ph, gT, fT;
-  if(t<165){ ph='quiet'; gT=.16; fT=0; }
-  else if(t<195){ ph='glow-build'; var u=(t-165)/30; gT=.16+.69*u; fT=.12*u; }
-  else if(t<228){ ph='fountaining'; gT=1; fT=.38; }
-  else if(t<272){ ph='lava-flow'; gT=.82; fT=1; }
-  else { ph='cooling'; var u2=(t-272)/13; gT=.82-.66*u2; fT=1; }
+  if(t<80){ ph='quiet'; gT=VOLC.erupted? .30 : .16; fT=VOLC.erupted? .45 : 0; } // after her first flow the channels cool to cracked ember, never to nothing — real ʻaʻā channels glow in their cracks long after the flow passes
+  else if(t<105){ ph='glow-build'; var u=(t-80)/25; gT=.16+.69*u; fT=.12*u; }
+  else if(t<138){ ph='fountaining'; gT=1; fT=.38; }
+  else if(t<182){ ph='lava-flow'; VOLC.erupted=true; gT=.82; fT=1; }
+  else { ph='cooling'; var u2=(t-182)/18; gT=.82-.52*u2; fT=1; }
   VOLC.phase=ph;
   VOLC.glow+=(gT-VOLC.glow)*Math.min(1,dt*(ph==='quiet'? .5 : 1.2));
   VOLC.flow+=(fT-VOLC.flow)*Math.min(1,dt*.25); // the flow creeps toward its reach over minutes
@@ -4559,17 +4613,18 @@ var rainGeo=new THREE.BufferGeometry(); rainGeo.setAttribute('position', new THR
    the shared uTime uniform: same 900 points, same 17 m/s fall, same
    90×30×90 m box wrapped around the player (uOff, a 2-float uniform —
    no buffer traffic at all). CPU cost per frame: zero writes. */
-var rainUniforms={uTime:uTime, uOff:{value:new THREE.Vector2(0,0)}, uScale:{value:600}};
+var rainUniforms={uTime:uTime, uOff:{value:new THREE.Vector2(0,0)}, uScale:{value:600}, uStrength:{value:0}}; // uStrength: the weather gate (WX below) — 0 on a clear night
+var WX={s:0, on:false, t:26}; // WEATHER (owner, 2026-11-05 — "it looks like it's snowing"): rain is now a passing squall, not a permanent condition — off ~55–130 s, on ~22–42 s, fading both ways, and never indoors
 var rain=new THREE.Points(rainGeo, new THREE.ShaderMaterial({transparent:true, depthWrite:false, uniforms:rainUniforms,
-  vertexShader:'uniform float uTime; uniform vec2 uOff; uniform float uScale; varying float vA;\n'+
+  vertexShader:'uniform float uTime; uniform vec2 uOff; uniform float uScale; uniform float uStrength; varying float vA;\n'+
    'void main(){ vec3 p=position; p.y=mod(p.y-uTime*17.0,30.0);\n'+
    ' vec2 rel=mod(p.xz-uOff,90.0)-45.0; p.xz=uOff+rel;\n'+
    ' vec4 mv=modelViewMatrix*vec4(p,1.0);\n'+
-   ' gl_PointSize=max(1.0, 0.16*uScale/max(1.0,-mv.z));\n'+
-   ' vA=.55*smoothstep(48.0,20.0,-mv.z);\n'+
+   ' gl_PointSize=max(1.0, 0.11*uScale/max(1.0,-mv.z));\n'+
+   ' vA=.38*smoothstep(48.0,20.0,-mv.z)*uStrength;\n'+
    ' gl_Position=projectionMatrix*mv; }',
   fragmentShader:'varying float vA;\n'+
-   'void main(){ float d=length(gl_PointCoord-vec2(.5)); float a=smoothstep(.5,.16,d)*vA;\n'+
+   'void main(){ vec2 pc=gl_PointCoord-vec2(.5); float a=smoothstep(.5,.40,abs(pc.y))*smoothstep(.17,.05,abs(pc.x))*vA;\n'+ // a STREAK, not a dot: tight across, long along the fall — round dots were the "snow"
    ' gl_FragColor=vec4(.62,.77,.91,a); }'}));
 rain.frustumCulled=false; // GLITCH SWEEP (2026-11-03): rain positions wrap around the player in the shader — a static bounding sphere at the origin would cull the whole system when the player walks off and looks away; a player-wrapped Points can never be culled by a stale sphere
 scene.add(rain);
@@ -5378,7 +5433,7 @@ function finishChapter(){ S.phase='done'; S.chDone.ch1=true; // G1: Ch.1 complet
 function logFlora(k,v){ if(!S.flora[k]){ S.flora[k]=v; toast('Naturalist\'s log updated 🌿'); } }
 
 function doInteract(){ if(!S.started||S.paused) return; audio();
-  if(nearItem&&nearItem.when()){ if(['tent','crates','fire','cache','supply','stoke','shrine','shrine2'].indexOf(nearItem.id)>=0){ atmInit(); effortSound(nearItem.id==='crates'||nearItem.id==='cache'); mechT=1; } nearItem.act(); } // O8 effort foley + I14: the hands go to the work
+  if(nearItem&&nearItem.when()){ if(['tent','crates','fire','cache','supply','stoke','shrine','shrine2'].indexOf(nearItem.id)>=0){ atmInit(); effortSound(nearItem.id==='crates'||nearItem.id==='cache'); mechT=1; useT=.75; } nearItem.act(); } // O8 effort foley + I14: the hands go to the work
   else toast('Nothing to do here — follow the gold prompt when it appears.',1800); }
 function toggleBow(){ if(!S.started||S.paused) return; S.bowed=!S.bowed;
   document.getElementById('bowBtn').classList.toggle('held',S.bowed);
@@ -5440,10 +5495,11 @@ function castSpell(){ if(!S.spell||S.spellCooldown>0) return; S.spellCooldown=10
    The same pose drives the first-person viewmodel AND Cook's arm in
    third person, so the stroke reads identically from both cameras. */
 var swing={t:-1, type:0, hitDone:false, hitStop:0, rebound:0, hitMat:null, whooshed:false};
+var useT=0; // 3P USE ANIMATION (owner 2026-11-05): seconds left of Cook's reach/work pose on the body — set where mechT is set, so Use / pick-up / build reads in third person too, not only in the 1P hand
 var swingFade=0, lastVmPose=null, lastTpPose=null, vmPull=0; // GLITCH PASS state: the swing end-blend (animation item — the stroke pose decays into the idle pose instead of snapping) and the viewmodel wall-clearance pull-back (clipping item)
 function swingPose(){ if(swing.t<0) return null; var t=swing.t;
-  var wT=Math.min(1,t/.30), sT=Math.max(0,Math.min(1,(t-.30)/.16)), rT=Math.max(0,Math.min(1,(t-.46)/.56));
-  var wS0=Math.max(0,Math.min(1,(t-.34)/.13));   // the wrist's OWN phase: still cocked while the shoulder starts, snapped home by t≈.47
+  var wT=Math.min(1,t/.17), sT=Math.max(0,Math.min(1,(t-.17)/.14)), rT=Math.max(0,Math.min(1,(t-.31)/.44));
+  var wS0=Math.max(0,Math.min(1,(t-.19)/.11));   // the wrist's OWN phase: still cocked while the shoulder starts, snapped home by t≈.30 — OWNER 2026-11-05 ("cutlass motion is awful"): the old .30 s wind-up made Strike feel like it started half a second late; commitment is now .17 s, total stroke .75 s
   var wind=1-Math.pow(1-wT,2);                    // ease-out raise: fast off guard, settling at full cock
   var slash=sT*sT*(3-2*sT);                      // the cut: accelerates through the middle of the arc
   var wSnap=wS0*wS0*(3-2*wS0);                   // the wrist snap, lagging the shoulder by design
@@ -6433,7 +6489,10 @@ document.getElementById('arHud').addEventListener('pointermove',function(e){ // 
 function tapWire(el,fn){ var fired=0;
   el.addEventListener('pointerdown',function(e){ e.preventDefault(); fired=performance.now(); fn(); });
   el.addEventListener('click',function(){ if(performance.now()-fired>500) fn(); }); }
-tapWire(document.getElementById('startBtn'),function(){ audio(); requestTilt(); tone(196,0,.4,'triangle',.1); tone(262,.15,.5,'triangle',.1);
+/* GAME PRESENCE (owner, 2026-11-05 — "put my phone into game mode when playing"): a web page cannot switch an iPhone into Game Mode or Focus — Apple reserves that for App Store games and the user, and no web API exists for it. What a page CAN do, this one now does: hold a screen Wake Lock while playing (the display never dims or sleeps mid-scene), re-acquired automatically if the tab resurfaces. */
+var _wake=null; function gameWake(){ if(!('wakeLock' in navigator)) return; try{ navigator.wakeLock.request('screen').then(function(w){ _wake=w; }); }catch(e){} }
+document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'&&typeof S!=='undefined'&&S.started) gameWake(); });
+tapWire(document.getElementById('startBtn'),function(){ audio(); requestTilt(); gameWake(); tone(196,0,.4,'triangle',.1); tone(262,.15,.5,'triangle',.1);
   S.started=true; S.phase='camp'; S.chapter='prologue'; S.m1=true; // MOVIE M1 (design trigger table): the landing plays as the game opens — banner, Kaipo's welcome, the road warning
   document.getElementById('titleScr').classList.add('hidden');
   document.getElementById('hud').classList.remove('hidden');
@@ -7019,15 +7078,16 @@ function animate(){ requestAnimationFrame(animate); var dt=Math.min(clock.getDel
     player.yaw -= pad.rx*2.0*dt; player.pitch=Math.max(-.9,Math.min(.9,player.pitch - pad.ry*1.7*dt));
     if(S.ukeCooldown>0)S.ukeCooldown-=dt; if(S.spellCooldown>0)S.spellCooldown-=dt;
     if(S.dartReload>0)S.dartReload-=dt;
+    if(useT>0) useT-=dt;
     /* swing clock: hit-stop freezes the stroke for a few frames on contact */
     if(swing.t>=0){ if(swing.hitStop>0){ swing.hitStop-=dt; }
-      else { swing.t+=dt; // real seconds: .30 wind-up, .16 cut, .56 follow-through/recovery
-        if(!swing.whooshed&&swing.t>=.295){ swing.whooshed=true; // the blade leaves the guard — a short air whoosh, pitched by stroke
+      else { swing.t+=dt; // real seconds: .17 wind-up, .14 cut, .44 follow-through/recovery (owner 2026-11-05: commitment shortened from .30/.16/.56)
+        if(!swing.whooshed&&swing.t>=.165){ swing.whooshed=true; // the blade leaves the guard — a short air whoosh, pitched by stroke
           noiseHit(0,.15,.085,'bandpass',swing.type===1? 950:1350,1.1); noiseHit(.05,.11,.05,'bandpass',640,1); }
-        if(!swing.hitDone&&swing.t>.36&&swing.t<.52){ swing.hitDone=true; // tested at mid-cut, edge first
+        if(!swing.hitDone&&swing.t>.20&&swing.t<.34){ swing.hitDone=true; // tested at mid-cut, edge first
           var hit=testSwingArc();
           if(hit){ swing.hitMat=hit.mat; swing.hitStop=.055; swing.rebound=1;
-            swing.t=.54; // the stroke deflects into recovery at the surface
+            swing.t=.36; // the stroke deflects into recovery at the surface
             var force=.8+speedFac*.4;
             if(hit.mat==='metal') clashSound(force); else if(hit.mat==='wood') woodSound(force);
             else if(hit.mat==='stone') stoneSound(force); else if(hit.mat==='flesh'){ fleshSound(force);
@@ -7035,7 +7095,7 @@ function animate(){ requestAnimationFrame(animate); var dt=Math.min(clock.getDel
               if(boarState.hp<=0) boarDie(); }
             else woodSound(force*.6);
             rumble(.55,.35,70); } }
-        if(swing.t>1.02){ swing.t=-1; } }
+        if(swing.t>.75){ swing.t=-1; } }
     if(swingFade>0&&swing.t<0) swingFade=Math.max(0,swingFade-dt/.22); // the stroke's residue decays over ~.22 s once the stroke ends — both cameras blend it out below
       if(swing.rebound>0) swing.rebound=Math.max(0,swing.rebound-dt*6); }
     updateDarts(dt);
@@ -7151,8 +7211,8 @@ function animate(){ requestAnimationFrame(animate); var dt=Math.min(clock.getDel
   var _fhT=performance.now(); animateHumans(dt); FP.sys.humans+=performance.now()-_fhT; // FRAME PROBE: the human system, timed at its real call site
   if(cook&&TPON){ // third-person tells: the ukulele pose and the cutlass stroke read on the body
     if(ukePlay.on){ cook.userData.armL.rotation.set(-.95,0,.4);
-      cook.userData.armR.rotation.set(-.75+Math.sin(performance.now()*.005)*.22,0,-.35);
-      cook.userData.torsoG.rotation.x=.12; }
+      cook.userData.armR.rotation.set(-.75+Math.sin(performance.now()*.005)*.34,0,-.35); // strum amplitude .22 → .34 (owner 2026-11-05): the playing must READ on the body at gameplay distance
+      cook.userData.torsoG.rotation.x=.12; cook.userData.torsoG.rotation.y=Math.sin(performance.now()*.0025)*.07; }
     else if(swing.t>=0){ var swp2=swingPose(); if(swp2){ var cu2=cook.userData;
       // the same sequenced stroke on the body: shoulder drives, elbow
       // unfolds through the cut, the arm rolls so the edge leads, and the
@@ -7164,6 +7224,11 @@ function animate(){ requestAnimationFrame(animate); var dt=Math.min(clock.getDel
       cu2.torsoG.rotation.x+=swp2.slash*.16-swp2.wind*.06;
       lastTpPose={x:cu2.armR.rotation.x, y:cu2.armR.rotation.y, z:cu2.armR.rotation.z,
         tx:cu2.torsoG.rotation.x, ty:cu2.torsoG.rotation.y}; } }
+    else if(useT>0){ var cu4=cook.userData; var up2=1-useT/.75, uEnv=Math.sin(Math.min(1,up2)*Math.PI); // the reach: both hands go to the work and come back — forward, torso leaning in (owner 2026-11-05: actions must animate in 3P too)
+      cu4.armR.rotation.x=-.35-.95*uEnv; cu4.armR.rotation.z=-.12+.08*uEnv; cu4.armR.rotation.y=0;
+      cu4.armL.rotation.x=-.65*uEnv; cu4.armL.rotation.z=.4-.3*uEnv;
+      cu4.torsoG.rotation.x=.17*uEnv; cu4.torsoG.rotation.y=0;
+      lastTpPose={x:cu4.armR.rotation.x, y:0, z:cu4.armR.rotation.z, tx:cu4.torsoG.rotation.x, ty:0}; swingFade=1; }
     else if(lastTpPose&&swingFade>0){ var sf2=swingFade*swingFade*(3-2*swingFade); var cu3=cook.userData; // GLITCH PASS: same end-snap on Cook's body — the arm (and the hard rotation.y=0 reset below) used to cut the stroke off in one frame; it eases home with the same decay
       cu3.armR.rotation.x+=(lastTpPose.x-cu3.armR.rotation.x)*sf2;
       cu3.armR.rotation.y+=(lastTpPose.y-cu3.armR.rotation.y)*sf2;
@@ -7184,7 +7249,7 @@ function animate(){ requestAnimationFrame(animate); var dt=Math.min(clock.getDel
   var dipNow=landT>0? landDip*(landT/.22) : 0;
   if(TPON){ var fx=-Math.sin(player.yaw), fz=-Math.cos(player.yaw);
     var rx2=Math.cos(player.yaw), rz2=-Math.sin(player.yaw);
-    var cxp=player.x-fx*4.5+rx2*.55, czp=player.z-fz*4.5+rz2*.55, cyp=baseY+2.3+camBob+jumpY*.4; // UPPER-LIMITS PASS: camera pulled back 3.6→4.5 m and raised 2.05→2.3 m — a closer, lower camera makes the near ground sweep past faster than the body is actually travelling
+    var cxp=player.x-fx*3.1+rx2*.55, czp=player.z-fz*3.1+rz2*.55, cyp=baseY+1.95+camBob+jumpY*.4; // OWNER 2026-11-05 — "the playable character remains a little too far away": pulled IN 4.5 → 3.1 m and height 2.3 → 1.95, superseding the UPPER-LIMITS pull-back — Cook must fill the frame
     for(var cci=0;cci<colliders.length;cci++){ var cc3=colliders[cci]; if(cc3.off) continue;
       var cdx=cxp-cc3.x, cdz=czp-cc3.z, cdd=Math.hypot(cdx,cdz);
       if(cdd<cc3.r+.45&&cdd>0.001){ var push=(cc3.r+.45)/cdd; cxp=cc3.x+cdx*push; czp=cc3.z+cdz*push; } }
@@ -7194,11 +7259,11 @@ function animate(){ requestAnimationFrame(animate); var dt=Math.min(clock.getDel
     var gY2=groundHeight(cxp,czp)+.38; if(cyp<gY2) cyp=gY2;
     var _cl=camClamp(player.x,player.z,cxp,czp); cxp=_cl[0]; czp=_cl[1]; // PASS A (item 8): the segment clamp runs LAST — nothing after it may move the camera back through a wall
     camera.position.set(cxp,cyp,czp); camera.rotation.order='YXZ';
-    camera.lookAt(player.x+fx*3.2+rx2*.3, baseY+1.42+Math.tan(player.pitch)*3.4+jumpY, player.z+fz*3.2+rz2*.3);
+    camera.lookAt(player.x+fx*2.6+rx2*.3, baseY+1.42+Math.tan(player.pitch)*3.4+jumpY, player.z+fz*2.6+rz2*.3);
     camera.rotation.z=Math.sin(stepPhase)*.004*Math.min(1,speedFac);
   } else {
     camera.position.set(player.x, baseY+eyeCur+camBob+jumpY-dipNow, player.z);
-    camera.rotation.order='YXZ'; camera.rotation.y=player.yaw; camera.rotation.x=player.pitch;
+    camera.rotation.order='YXZ'; camera.rotation.y=player.yaw; camera.rotation.x=player.pitch+((swing.t>.17&&swing.t<.45)? Math.sin((swing.t-.17)/.28*Math.PI)*.03:0); // the cut tugs the view a hair at mid-stroke — the body is in the blow (owner 2026-11-05)
     camera.rotation.z=Math.sin(stepPhase)*.005*Math.min(1,speedFac); }
   } // /AR camera guard
   /* the lantern shadow light: near a lit fire it borrows the fire's
@@ -7393,6 +7458,9 @@ function animate(){ requestAnimationFrame(animate); var dt=Math.min(clock.getDel
   kii.rotation.y+=dt*.7; shrineGlow.intensity=S.tiki?1.4: (0.7+Math.sin(performance.now()*.002)*.35);
   // rain fall — FRAME PASS: the CPU rewrite loop is GONE; the fall runs in the rain vertex shader off uTime. All that remains per frame is the 2-float wrap origin + the point-scale uniform (canvas height in px).
   rainUniforms.uOff.value.set(player.x,player.z);
+  WX.t-=dt; if(WX.t<=0){ WX.on=!WX.on; WX.t=WX.on? 22+Math.random()*20 : 55+Math.random()*75; }
+  var _wxT=(WX.on&&!S.inside)? 1:0; WX.s+=(_wxT-WX.s)*Math.min(1,dt*.5);
+  rain.visible=WX.s>.02; rainUniforms.uStrength.value=WX.s; // squall strength — clear nights and tent/hale interiors stay dry
   rainUniforms.uScale.value=canvas.height*.5;
   sea.position.y=-.15+Math.sin(performance.now()*.0008)*.06;
   if(AR.on) updateAR(dt);
@@ -8700,8 +8768,8 @@ window.__HP={S:S,player:player,start:function(){document.getElementById('startBt
       cost:'nine small merged meshes + one Points draw; adaptive quality untouched; every behaviour a closed loop inside its own volume under the item-E stability rules'},
     kii:{ // ITEM I — the tiki is a kiʻi now
       before:'a cylinder body, a BOX head, a flat slab for a headdress and two glowing teal marbles for eyes — the generic-idol failure, exactly as the owner called it',
-      studied:'Reference Pack §E\'s carved-kiʻi shelf (the British Museum / Bishop Museum Kū figures) governs the form. NAMED LIMIT: the shelf photographs could not be opened from this build session — the rebuild follows the pack\'s documented iconography and the canonical museum descriptions of kiʻi akua; the owner\'s eye is the check, as with the people gate',
-      form:'a kiʻi akua of KŪ (this shrine\'s ward is Kūpale, Kū\'s protection — the identity is his, not a reskin): 2.05 m carved figure; the head ≈ a third of it; a ribbed crest of seven ribs plus its slab sweeping up and back; brow shelf; glaring bone-inlay eyes with dark pupils (a stare, not a glow); flaring nostrils; open mouth, bared bone teeth, the tongue out; a lathe-turned muscular torso with pectoral mass and carved groove rings; hands meeting at the belly; flexed stance; weathered grey-brown patina in the wood grain',
+      studied:'the genuine-image study owed in REALITY_AUDIT R-KII-1 was done 2026-11-05 from the museums\' own photographs and object records, read directly: British Museum great Kū temple figure Oc1839,0426.8 (BM photograph AN00035830); Bishop Museum\'s Kini Ke Kua kiʻi (Bishop Museum photograph); Te Papa and National Museum of Australia object records for the pearl-shell eye inlay; National Museum of Ireland / National Museum of Scotland records for stance and carving. Met / Smithsonian Hawaiian wooden-kiʻi pages could not be verified and are NOT claimed. Full study: the goal files, Kiʻi Museum Reference Study',
+      form:'a kiʻi akua of KŪ (this shrine\'s ward is Kūpale, Kū\'s protection — the identity is his, not a reskin): \u22482.08 m carved figure; head + crest \u2248 38\u201340% of it; a crest HELMET of locks \u2014 knob rows over the crown, stacked-lock falls down both sides of the face to the jaw, ribbed slab behind; a heavy brow mass overhanging pearl-shell OVAL eyes set diagonally with dark seed pupils, sunk in shadow (a glare, not marbles); flaring nostrils; a wide open mouth \u2014 up-curling corners, three stacked groove ridges per lip, nine individually cut upper teeth and seven lower, the tongue a mass INSIDE the mouth, jaw thrust forward; a nine-facet lathe torso with pectoral mass and a carved navel diamond (the old groove rings are GONE \u2014 no museum figure wears them); the warrior crouch \u2014 knees bent, calves flexed, arms tight to the body, fists clenched at the back of the thighs; the carved organ of the genuine images; dark aged wood',
       untouched:'shrine placement, the take-the-tiki collection and the Kūpale spell work exactly as before'},
     people:{headGeometry:humans[0]? humans[0].userData.headG.children[0].geometry.type : null, // 'LatheGeometry'
       limbGeometry:humans[0]? humans[0].userData.armL.children[0].geometry.type : null, // 'LatheGeometry' — the tube (CylinderGeometry) is gone
