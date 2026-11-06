@@ -26,7 +26,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Noto+Serif:ital,wght@0,400;0,600;1,400&family=Noto+Sans+Symbols+2&display=swap" rel="stylesheet"/>
 <title>Huakaʻi Pō — Night Marchers (Mobile)</title>
 <script>
-/* three.min.js r128 — INLINED by the rescue (2026-11-05) */
 /**
  * @license
  * Copyright 2010-2021 Three.js Authors
@@ -4657,7 +4656,7 @@ function vmBatch(list,mat){ var m=new THREE.Mesh(mergeGeos(list),mat); m.frustum
    reworked wiring that never got the chance to run). Keep this chain
    ONE var statement — no semicolon before the last declarator. */
 var vmSteel=vmMat(0xb9c2cc,.35,.55), vmBrass=vmMat(0xa87f2f,.45,.55), vmWood=vmMat(0x5d4020,.85,0),
-    vmBladeMat=vmMat(0x8f9aa6,.48,.65), vmBladeDark=vmMat(0x5f6871,.52,.6), // PASS B1 (item 2): the cutlass blade gets its OWN steel — darker and rougher than the shared bright steel (.35 → .48 roughness), so a broad face turned to the lantern reads as lit metal with a fuller line, not a blown-out white sheet
+    vmBladeMat=vmMat(0x646e7a,.58,.5), vmBladeDark=vmMat(0x5f6871,.52,.6), // PASS B1 (item 2): the cutlass blade gets its OWN steel — darker and rougher than the shared bright steel (.35 → .48 roughness), so a broad face turned to the lantern reads as lit metal with a fuller line, not a blown-out white sheet. RECORDING PASS (2026-11-05): base darkened further 0x8f9aa6 → 0x646e7a, roughness .48 → .58, metalness .65 → .5 — on the owner's device the broad face STILL blew out to a white sheet under the dawn hemisphere (his 21:18 recording, lūʻau frames). WARNING (learned the hard way, same night): never let a // comment land mid-line in this var chain — the first version of this very edit commented vmBladeDark out of existence and killed boot; the probe caught it before publish.
     vmDarkWood=vmMat(0x3c2712,.9,0), vmIron=vmMat(0x3a3f45,.5,.7), vmBamboo=vmMat(0xa98d4f,.8,0);
 vmWood.map=woodTex(); vmDarkWood.map=woodTex(); vmBamboo.map=bambooTex(); // grain on the held weapons too
 /* — cutlass: leather grip, brass pommel + knuckle guard, broad steel blade — */
@@ -4687,8 +4686,8 @@ var _bladeGeo=new THREE.ExtrudeGeometry(_bladeShape,{depth:.005, bevelEnabled:tr
 _bladeGeo.translate(0,0,-.0025);
 var vmBladeMesh=vmMesh(_bladeGeo, vmBladeMat, 0,0,0); vmCut.add(vmBladeMesh);
 vmCut.add(vmBatch([ // the fuller: a dark groove line down each face — the tonal break that keeps a broad face reading as steel, not paper
-  xform(new THREE.BoxGeometry(.007,.36,.0008), 0,.30,.0054),
-  xform(new THREE.BoxGeometry(.007,.36,.0008), 0,.30,-.0054)], vmBladeDark));
+  xform(new THREE.BoxGeometry(.012,.36,.0008), 0,.30,.0054),
+  xform(new THREE.BoxGeometry(.012,.36,.0008), 0,.30,-.0054)], vmBladeDark)); // RECORDING PASS: fuller widened .007 → .012 so the tonal break actually survives at device distance
 vmCut.rotation.set(-.35,0,.08);
 /* — flintlock pistol: octagonal barrel forward, walnut stock, brass lock — */
 var vmFlint=new THREE.Group();
@@ -5527,7 +5526,7 @@ function swingPose(){ if(swing.t<0) return null; var t=swing.t;
     shoulder=(wind*.38*(1-slash) - slash*.3 + rec*.3)*amp; // level: the arm stays at shoulder height through the arc
     cross=(wind*.95*(1-slash) - slash*1.0*(1-rec*.8))*amp; // + = blade held to the wielder's LEFT, − = exited RIGHT
     twist=(wind*.42 - slash*.72 + rec*.5)*amp;
-    dip=slash*.07; }
+    dip=slash*.32; } // RECORDING PASS (2026-11-05): was .07 — the level swipe crossed at EYE LINE and read on device as a pale plank across the whole view (owner recording 21:18, lūʻau frames); .32 drops the arc into the lower third while the cut still runs left-to-right
   return {a:shoulder, shoulder:shoulder, elbow:elbow, wrist:wrist, roll:roll, twist:twist, cross:cross,
     dip:dip, wind:wind, slash:slash, rec:rec}; }
 function testSwingArc(){ // called once per swing at mid-slash
@@ -6944,7 +6943,7 @@ function camClamp(hx,hz,cx,cz){ var dx=cx-hx, dz=cz-hz, len=Math.hypot(dx,dz);
   if(best>=1) return [cx,cz];
   best=Math.max(best,.07); // never inside the head: at full 4.5 m reach the floor keeps ≥.3 m of air
   return [hx+dx*best, hz+dz*best]; }
-function animate(){ requestAnimationFrame(animate); var dt=Math.min(clock.getDelta(),.05);
+function animate(){ requestAnimationFrame(animate); var rawDt=clock.getDelta(); var dt=Math.min(rawDt,.05); // RECORDING PASS (owner recording, 2026-11-05 21:18 EST): rawDt is the REAL frame time. The fps meter and dynRes both read the CLAMPED dt, so the meter could never display below 20 fps (1/.05) no matter how slow the device ran, and dynRes averaged fiction. Gameplay keeps the clamped dt exactly as before; measurement now uses rawDt.
   var _fpT=performance.now(); if(FP.last) FP.push(_fpT-FP.last); FP.last=_fpT; FP.js0=_fpT; // FRAME PROBE: real rAF delta into the ring
   if(journalIsOpen()) pollPad(); // JOURNAL FIX: the pad is still polled while the Journal pauses the world, so Triangle/Y can close what it opened (pollPad gates every other action off while the Journal is up)
   if(S.started&&!S.paused){ S.playSecs+=dt; pollPad();
@@ -7102,7 +7101,7 @@ function animate(){ requestAnimationFrame(animate); var dt=Math.min(clock.getDel
     interactables[3].x=tom.position.x; interactables[3].z=tom.position.z+1.6; // Tom's rescue point travels with him
     var _fgT=performance.now(); nearestInteract(); updateGuidance(); FP.sys.guidance+=performance.now()-_fgT; // FRAME COMPLETION: the interact scan + guidance are one timed bucket
     var _fp2T=performance.now(); updatePass(dt); FP.sys.pass+=performance.now()-_fp2T; // FRAME COMPLETION: the Marcher line, timed at its call site (was buried in otherJs)
-    dynRes(dt);
+    dynRes(rawDt);
     updateGrassBend(dt);
     var _faT=performance.now(); updateAtmosphere(dt); updateUkePlay(dt); updateLuau(dt); updateHulaMusic(); FP.sys.audio+=performance.now()-_faT; // FRAME COMPLETION: every audio scheduler, one bucket
     updateFlaps(dt);
@@ -7319,7 +7318,7 @@ function animate(){ requestAnimationFrame(animate); var dt=Math.min(clock.getDel
       // arm root twists with the body; a contact rebound kicks it back
       var rb=swing.rebound*.25;
       if(swing.type===0){ // THE SWIPE: level, left to right — the blade's yaw is driven by the cross channel (+.95 wound at the left → −1.0 exited right) while the pitch stays near level (dip .07 in the pose); the wrist angle rides on top so the edge leads the whole way across
-        vmCut.rotation.set(-.52-sp2.shoulder*.18-sp2.wrist*.2+rb, sp2.cross*1.15, -.12-sp2.roll*.45);
+        vmCut.rotation.set(-.60-sp2.shoulder*.18-sp2.wrist*.2+rb, sp2.cross*.85, -.12-sp2.roll*.45); // RECORDING PASS: pitch base -.52 → -.60 and yaw gain 1.15 → .85 — the blade stays angled through the swipe instead of squaring its broad face to the eye at the cross extremes
         vmRight.rotation.set(0, -sp2.cross*.3-sp2.twist*.2, .08-sp2.elbow*.12);
       } else if(swing.type===2){ // backhand cut: cocked across the body, sweeping back out — the mirrored roll keeps the edge leading on the reverse arc
         vmCut.rotation.set(-.4-sp2.shoulder*.5-sp2.wrist*.22+rb, sp2.cross*.8, -.1-sp2.roll*.75);
@@ -7478,7 +7477,7 @@ function animate(){ requestAnimationFrame(animate); var dt=Math.min(clock.getDel
   if((thermalCap||S.quality==='battery')&&frameNo%2===0){ /* 30 fps render cap: logic still runs full-rate */ }
   else { var _frT=performance.now(); renderer.render(scene,camera); FP.sys.render+=performance.now()-_frT; }
   FP.sys.js+=performance.now()-FP.js0; FP.sysN++; // total JS this frame (render + humans are inside it; report derives otherJs = js − humans − render)
-  if(perfOn){ fpsSmooth+=((1/Math.max(dt,.001))-fpsSmooth)*.04;
+  if(perfOn){ fpsSmooth+=((1/Math.max(rawDt,.001))-fpsSmooth)*.04;
     if(frameNo%20===0){ var ri=renderer.info.render;
       document.getElementById('perfHud').textContent=Math.round(fpsSmooth)+' fps · '+ri.calls+' calls · '+
         Math.round(ri.triangles/1000)+'k tris · res '+(S.pixelScale*(QUALITY[S.quality]||.82)).toFixed(2)+'× '+S.quality+
@@ -8011,7 +8010,7 @@ function runPassB1Test(){ /* PASS B1 (people + first-person view-models,
       diagPct:Math.round(Math.sqrt(Math.pow(wIn*16/9,2)+Math.pow(hIn,2))/Math.sqrt(Math.pow(16/9,2)+1)),
       minDistM:Math.round(minD*100)/100}; }
   function poseCut(root,cut,ty,t,push){ swing.type=ty; swing.t=t; var sp=swingPose(); if(!sp) return;
-    if(ty===0){ cut.rotation.set(-.52-sp.shoulder*.18-sp.wrist*.2, sp.cross*1.15, -.12-sp.roll*.45); root.rotation.set(0,-sp.cross*.3-sp.twist*.2,.08-sp.elbow*.12); }
+    if(ty===0){ cut.rotation.set(-.60-sp.shoulder*.18-sp.wrist*.2, sp.cross*.85, -.12-sp.roll*.45); root.rotation.set(0,-sp.cross*.3-sp.twist*.2,.08-sp.elbow*.12); }
     else if(ty===2){ cut.rotation.set(-.4-sp.shoulder*.5-sp.wrist*.22, sp.cross*.8, -.1-sp.roll*.75); root.rotation.set(0,-sp.twist*.35-sp.cross*.3,sp.twist*.4-sp.elbow*.15); }
     else { cut.rotation.set(-.4-sp.shoulder*1.1-sp.wrist*.3, .18, .3-sp.roll*.5); root.rotation.set(0,-sp.twist*.22,sp.twist*.22-sp.elbow*.1); }
     cut.position.y=-.05*sp.slash-sp.dip*.03; cut.position.z=push? -.05*sp.slash : 0; }
