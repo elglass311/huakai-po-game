@@ -5504,14 +5504,14 @@ function swingPose(){ if(swing.t<0) return null; var t=swing.t;
   var wSnap=wS0*wS0*(3-2*wS0);                   // the wrist snap, lagging the shoulder by design
   var rec=rT*rT*(3-2*rT);                        // follow-through unwinds, never snaps
   var mir=swing.type===2? -1 : 1;                // the backhand mirrors roll and body twist
-  var amp=swing.type===1? .85 : 1;               // the chop is a touch shorter than the forehand sweep
+  var amp=swing.type===1? .85 : 1;               // the return swipe is a touch shorter than the forehand sweep
   var shoulder=((wind*(1-slash)) - slash*1.6 + rec*1.6*slash)*amp; // + cocked up/back, − swept through
   var elbow=(wind*.6*(1-slash) + slash*.12 - rec*.35)*amp;         // folds in the wind-up, extends through the cut's middle
   var wrist=(wind*.85*(1-wSnap) - wSnap*1.05 + rec*.8)*amp;        // cocks first in the wind-up, fires LAST in the cut — the edge arrives aligned
   var roll=(wind*.35 - slash*1.25 + rec*.9)*amp*mir;               // forearm roll: the blade's edge stays ON the arc
   var twist=(wind*.3 - slash*.55 + rec*.28)*amp*mir;               // hips and shoulders turn into the cut
   var cross=swing.type===2? (wind*.6*(1-slash) - slash*.55 + rec*.4)*amp : 0; // backhand only: the arm starts cocked ACROSS the body
-  var dip=slash*(swing.type===1? .9 : swing.type===2? .45 : .25);
+  var dip=slash*(swing.type===1? .07 : swing.type===2? .12 : .25); // side-to-side strokes stay LEVEL (owner order 2026-11-05 22:09 EST — "swipe side to side and not up and down"): the chop's old .9 downward dip and the backhand's .45 are gone; type 1's value here is superseded by its override block below
   if(swing.type===0){ /* THE SWIPE (owner order — "a left to right swiping
      motion"): stroke 0, the PRIMARY cut, is re-led as a true horizontal
      swipe. The wind-up draws the blade across to the wielder's LEFT
@@ -5521,12 +5521,35 @@ function swingPose(){ if(swing.t<0) return null; var t=swing.t;
      RIGHT, the torso unwinding with it (twist +.42 → −.72), the wrist
      snap riding the same lag as every stroke so the edge leads; the
      follow-through exits right and rec bleeds the cross back toward
-     guard. The chop (1) and backhand (2) follow as subordinate strokes.
+     guard. The return swipe (1) and the backhand (2) follow as
+     subordinate strokes — all three run side to side, none up and
+     down (owner order 2026-11-05 22:09 EST).
      qc().swing samples THIS function for the tip trace. */
     shoulder=(wind*.38*(1-slash) - slash*.3 + rec*.3)*amp; // level: the arm stays at shoulder height through the arc
     cross=(wind*.95*(1-slash) - slash*1.0*(1-rec*.8))*amp; // + = blade held to the wielder's LEFT, − = exited RIGHT
     twist=(wind*.42 - slash*.72 + rec*.5)*amp;
-    dip=slash*.32; } // RECORDING PASS (2026-11-05): was .07 — the level swipe crossed at EYE LINE and read on device as a pale plank across the whole view (owner recording 21:18, lūʻau frames); .32 drops the arc into the lower third while the cut still runs left-to-right
+    dip=slash*.07; } // LEVEL, as the owner's original swipe spec set it. RECORDING PASS (2026-11-05) dropped this to .32 to pull the arc off the eye line; the owner then ordered the motion itself — "side to side and not up and down" (22:09 EST) — and a .32 drop IS vertical travel, so .07 is restored. The white-sheet fix rides on the darker steel (0x646e7a) and the reduced yaw gain instead.
+  if(swing.type===1){ /* THE RETURN SWIPE (owner order 2026-11-05 22:09
+     EST — "Cutlass should swipe side to side and not up and down"):
+     stroke 1 WAS the chop — a raised-arm vertical cut (shoulder swept
+     +1.6 → −1.6, dip .9), the up-and-down stroke, and it fired every
+     third Strike (type = swingN % 3). It is now a level RETURN swipe:
+     the wind-up draws the blade out to the wielder's RIGHT (cross −.9,
+     arm level), the cut runs LEVEL right-to-left across the front
+     (dip .07) and exits at +.85 on the LEFT, the torso unwinding the
+     other way; amp .85 keeps it a touch shorter than the forehand.
+     testSwingArc gives it the forehand's wide tolerance — what you
+     see is what connects. */
+    shoulder=(wind*.38*(1-slash) - slash*.3 + rec*.3)*amp; // level, same as the forehand
+    cross=(-wind*.9*(1-slash) + slash*.85*(1-rec*.8))*amp; // − = blade held to the wielder's RIGHT, + = exited LEFT
+    twist=(-wind*.42 + slash*.72 - rec*.5)*amp;
+    dip=slash*.07; }
+  if(swing.type===2){ /* the backhand keeps its across-body cross and
+     mirrored twist, but its SHOULDER rides level like the two swipes:
+     the generic formula swept it +1.0 → −1.6, the largest vertical arm
+     travel of the three strokes (measured from this function,
+     2026-11-05) — up-and-down by the back door. */
+    shoulder=(wind*.38*(1-slash) - slash*.3 + rec*.3)*amp; }
   return {a:shoulder, shoulder:shoulder, elbow:elbow, wrist:wrist, roll:roll, twist:twist, cross:cross,
     dip:dip, wind:wind, slash:slash, rec:rec}; }
 function testSwingArc(){ // called once per swing at mid-slash
@@ -5536,7 +5559,7 @@ function testSwingArc(){ // called once per swing at mid-slash
     var cx=c.x-player.x, cz=c.z-player.z, along=cx*fx+cz*fz;
     if(along<.2||along>reach+c.r) continue;
     var perp=Math.abs(cx*fz-cz*fx);
-    if(perp<c.r+(swing.type===0? .85 : .3)&&along<bestD){ bestD=along; best=c; } } // the SWIPE tests the arc it actually sweeps: a level left-to-right cut connects across the whole front (perp tolerance widened for stroke 0 only) — what you see is what connects
+    if(perp<c.r+((swing.type===0||swing.type===1)? .85 : .3)&&along<bestD){ bestD=along; best=c; } } // the SWIPES test the arc they actually sweep: a level side-to-side cut connects across the whole front (perp tolerance widened for strokes 0 and 1, the two level swipes) — what you see is what connects
   if(boar.visible&&boarState.alive){ var bx=boar.position.x-player.x, bz=boar.position.z-player.z;
     var ba=bx*fx+bz*fz, bp=Math.abs(bx*fz-bz*fx);
     if(ba>0&&ba<reach+.6&&bp<(swing.type===0? 1.5 : .9)&&ba<bestD){ best={mat:'flesh', boar:true}; bestD=ba; } }
@@ -7327,9 +7350,9 @@ function animate(){ requestAnimationFrame(animate); var rawDt=clock.getDelta(); 
       } else if(swing.type===2){ // backhand cut: cocked across the body, sweeping back out — the mirrored roll keeps the edge leading on the reverse arc
         vmCut.rotation.set(-.4-sp2.shoulder*.5-sp2.wrist*.22+rb, sp2.cross*.8, -.1-sp2.roll*.75);
         vmRight.rotation.set(0, -sp2.twist*.35-sp2.cross*.3, sp2.twist*.4-sp2.elbow*.15);
-      } else { // diagonal chop: from the high shoulder, down through the line
-        vmCut.rotation.set(-.4-sp2.shoulder*1.1-sp2.wrist*.3+rb, .18, .3-sp2.roll*.5);
-        vmRight.rotation.set(0, -sp2.twist*.22, sp2.twist*.22-sp2.elbow*.1);
+      } else { // THE RETURN SWIPE: right to left, level (owner order 2026-11-05 22:09 EST) — the same application as the forehand swipe; the cross channel carries the direction (−.9 wound at the right → +.85 exited left) while the pitch stays near level. This branch WAS the diagonal chop: fixed yaw .18 and a 1.1 pitch gain on the shoulder, which would have kept stroke 1 pitching down even with a level pose feeding it.
+        vmCut.rotation.set(-.60-sp2.shoulder*.18-sp2.wrist*.2+rb, sp2.cross*.85, -.12-sp2.roll*.45);
+        vmRight.rotation.set(0, -sp2.cross*.3-sp2.twist*.2, .08-sp2.elbow*.12);
       }
       vmCut.position.y=-.05*sp2.slash-sp2.dip*.03;
       vmCut.position.z=-.05*sp2.slash; // PASS B1 (item 2): through the cut the arm extends AWAY — the blade's nearest approach to the eye stays ≥ .11 m (was −.02: through the camera plane)
@@ -8016,7 +8039,7 @@ function runPassB1Test(){ /* PASS B1 (people + first-person view-models,
   function poseCut(root,cut,ty,t,push){ swing.type=ty; swing.t=t; var sp=swingPose(); if(!sp) return;
     if(ty===0){ cut.rotation.set(-.60-sp.shoulder*.18-sp.wrist*.2, sp.cross*.85, -.12-sp.roll*.45); root.rotation.set(0,-sp.cross*.3-sp.twist*.2,.08-sp.elbow*.12); }
     else if(ty===2){ cut.rotation.set(-.4-sp.shoulder*.5-sp.wrist*.22, sp.cross*.8, -.1-sp.roll*.75); root.rotation.set(0,-sp.twist*.35-sp.cross*.3,sp.twist*.4-sp.elbow*.15); }
-    else { cut.rotation.set(-.4-sp.shoulder*1.1-sp.wrist*.3, .18, .3-sp.roll*.5); root.rotation.set(0,-sp.twist*.22,sp.twist*.22-sp.elbow*.1); }
+    else { cut.rotation.set(-.60-sp.shoulder*.18-sp.wrist*.2, sp.cross*.85, -.12-sp.roll*.45); root.rotation.set(0,-sp.cross*.3-sp.twist*.2,.08-sp.elbow*.12); } // stroke 1 mirrors the forehand application since the return-swipe pass (owner order 2026-11-05 22:09 EST) — it was the diagonal-chop application (−.4 pitch, 1.1 shoulder gain, fixed .18 yaw)
     cut.position.y=-.05*sp.slash-sp.dip*.03; cut.position.z=push? -.05*sp.slash : 0; }
   function worstSwing(root,cut,blade,push){ var w={w:0,h:0,minD:9};
     [0,1,2].forEach(function(ty){ for(var t=0;t<=1.02;t+=.02){ poseCut(root,cut,ty,t,push);
