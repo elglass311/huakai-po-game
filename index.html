@@ -6070,7 +6070,12 @@ document.getElementById('jumpBtn').addEventListener('click',function(){
   tapJumpOn=!tapJumpOn;
   document.getElementById('jumpLabel').textContent=tapJumpOn? 'On':'Off';
   toast('Tap-to-jump '+(tapJumpOn?'on':'off')); });
-var perfOn=false, fpsSmooth=60;
+/* HITCH PASS (2026-11-06, owner-approved full pass): the HUD fps is now
+   measured on RENDERED frames only. _renderDtAvg is an EMA of the time
+   between actual renderer.render() calls, so frames skipped by the 30 fps
+   cap no longer inflate the number, and frame TIMES are averaged — not
+   instantaneous rates, whose average flatters any mixed stream. */
+var perfOn=false, fpsSmooth=60, _lastRenderT=0, _renderDtAvg=0;
 document.getElementById('perfBtn').addEventListener('click',function(){
   perfOn=!perfOn;
   document.getElementById('perfLabel').textContent=perfOn? 'On':'Off';
@@ -6188,7 +6193,7 @@ document.querySelectorAll('#rumbleSeg button').forEach(function(b){ settingsWire
 document.getElementById('pauseQualityBtn').addEventListener('click',function(){
   var order=['battery','performance','balanced','graphics']; selectQuality(order[(order.indexOf(S.quality)+1)%4]);
   toast('Graphics: '+QUALITY_NAME[S.quality]); });
-var fpsAcc=0,fpsN=0,fpsTimer=0,lowStreak=0;
+var fpsAcc=0,fpsN=0,fpsTimer=0,lowStreak=0,hiStreak=0;
 var _dynLastAdj=-99, _dynUpStreak=0; // FRAME PASS: applyQuality() reallocates the drawing buffer (setPixelRatio + resize) — a guaranteed one-frame hitch. The old thresholds (down at <42, up at >57, judged every 2.5 s) could ping-pong across a boundary and serve that hitch every few seconds forever: a periodic stutter with a regular heartbeat. Adjustments now need a 6 s spacing, and a raise needs TWO consecutive strong windows.
 // OWNER DECISION (2026-11-05 21:57 EST): the adaptive safety net is ON for
 // Best Graphics too — the old first-statement early return for 'graphics'
@@ -6197,13 +6202,15 @@ var _dynLastAdj=-99, _dynUpStreak=0; // FRAME PASS: applyQuality() reallocates t
 function dynRes(dt){ fpsAcc+=dt; fpsN++; fpsTimer+=dt;
   if(fpsTimer>2.5){ var avg=fpsN/fpsAcc; fpsTimer=0; fpsAcc=0; fpsN=0;
     var nowS2=performance.now()*.001, canAdj=nowS2-_dynLastAdj>6;
-    if(avg<42&&S.pixelScale>.5){ _dynUpStreak=0;
+    var rAvg=(thermalCap||S.quality==='battery')? avg*.5 : avg; // HITCH PASS: judge every threshold by the rate the screen actually shows — while a cap renders every 2nd frame, the rendered rate is half the loop rate
+    if(rAvg<42&&S.pixelScale>.5){ _dynUpStreak=0;
       if(canAdj){ S.pixelScale=Math.max(.5,S.pixelScale-.15); _dynLastAdj=nowS2; applyQuality(); } }
-    else if(avg>57&&S.pixelScale<1){ _dynUpStreak++;
+    else if(rAvg>57&&S.pixelScale<1){ _dynUpStreak++;
       if(_dynUpStreak>=2&&canAdj){ S.pixelScale=Math.min(1,S.pixelScale+.1); _dynLastAdj=nowS2; _dynUpStreak=0; applyQuality(); } }
     else _dynUpStreak=0;
-    if(avg<30){ lowStreak++; if(lowStreak>=3&&S.pixelScale<=.52&&!thermalCap){ thermalCap=true; toast('Heat protection: frame rate capped at 30 to keep play smooth.'); } }
-    else lowStreak=0; } }
+    if(rAvg<30){ lowStreak++; if(lowStreak>=3&&S.pixelScale<=.52&&!thermalCap){ thermalCap=true; hiStreak=0; toast('Heat protection: frame rate capped at 30 to keep play smooth.'); } }
+    else lowStreak=0;
+    if(thermalCap){ if(rAvg>50){ hiStreak++; if(hiStreak>=3){ thermalCap=false; hiStreak=0; lowStreak=0; toast('Heat protection off: full frame rate restored.'); } } else hiStreak=0; } } }
 
 /* ============================== AR PROCESSION — PHASE A ==============================
    The procession crosses the player's REAL space: rear-camera feed under a
@@ -7493,18 +7500,21 @@ function animate(){ requestAnimationFrame(animate); var rawDt=clock.getDelta(); 
   frameNo++;
   /* FRAME PASS — shadow cadence: shadow maps re-render at most every
      3rd frame, and immediately when the player has actually moved
-     (>0.25 m) or a procession pass starts/stops (torch shadows are the
+     (>1.0 m — HITCH PASS 2026-11-06: raised from 0.25 m, which fired
+     near-continuously while walking and defeated the cadence) or a
+     procession pass starts/stops (torch shadows are the
      pass's visual). Everything else about the shadow LOOK is unchanged:
      same lights, same map sizes, same casters — only the refresh rate
      of a mostly-static night scene changes. */
   FP.shadowFrames++;
-  if(frameNo%3===0||Math.hypot(player.x-_shX,player.z-_shZ)>.25||S.passActive!==_shPass){
+  if(frameNo%3===0||Math.hypot(player.x-_shX,player.z-_shZ)>1||S.passActive!==_shPass){
     renderer.shadowMap.needsUpdate=true; FP.shadowUpdates++;
     _shX=player.x; _shZ=player.z; _shPass=S.passActive; }
   if((thermalCap||S.quality==='battery')&&frameNo%2===0){ /* 30 fps render cap: logic still runs full-rate */ }
-  else { var _frT=performance.now(); renderer.render(scene,camera); FP.sys.render+=performance.now()-_frT; }
+  else { var _frT=performance.now(); renderer.render(scene,camera); FP.sys.render+=performance.now()-_frT;
+    var _rNow=performance.now(); if(_lastRenderT>0){ var _rdt=(_rNow-_lastRenderT)*.001; if(_rdt>0&&_rdt<1){ _renderDtAvg=_renderDtAvg>0? _renderDtAvg+(_rdt-_renderDtAvg)*.06 : _rdt; } } _lastRenderT=_rNow; }
   FP.sys.js+=performance.now()-FP.js0; FP.sysN++; // total JS this frame (render + humans are inside it; report derives otherJs = js − humans − render)
-  if(perfOn){ fpsSmooth+=((1/Math.max(rawDt,.001))-fpsSmooth)*.04;
+  if(perfOn){ fpsSmooth=_renderDtAvg>0? 1/_renderDtAvg : fpsSmooth;
     if(frameNo%20===0){ var ri=renderer.info.render;
       document.getElementById('perfHud').textContent=Math.round(fpsSmooth)+' fps · '+ri.calls+' calls · '+
         Math.round(ri.triangles/1000)+'k tris · res '+(S.pixelScale*(QUALITY[S.quality]||.82)).toFixed(2)+'× '+S.quality+
