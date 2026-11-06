@@ -368,7 +368,7 @@ button{font-family:inherit;color:var(--ink);cursor:pointer;}
     <div class="setGroup">
       <div class="lbl">Graphics quality</div>
       <div class="seg" id="qualitySeg">
-        <button data-q="battery"><span class="qn">Battery Saver</span><small>50% render scale · 30 fps cap · smallest shadows, vignette off — easiest on the battery, softest picture</small></button><button data-q="performance"><span class="qn">Performance</span><small>62% render scale · small shadows · lowers itself if frames dip — the smoothest motion</small></button><button data-q="balanced" class="sel"><span class="qn">Balanced (recommended)</span><small>82% render scale · medium shadows · lowers itself if frames dip — sharpness and smoothness in balance</small></button><button data-q="graphics"><span class="qn">Best Graphics</span><small>100% render scale, never lowered · biggest shadows, plus real moonlight shadows — sharpest picture, hardest on battery and heat</small></button>
+        <button data-q="battery"><span class="qn">Battery Saver</span><small>50% render scale · 30 fps cap · smallest shadows, vignette off — easiest on the battery, softest picture</small></button><button data-q="performance"><span class="qn">Performance</span><small>62% render scale · small shadows · lowers itself if frames dip — the smoothest motion</small></button><button data-q="balanced" class="sel"><span class="qn">Balanced (recommended)</span><small>82% render scale · medium shadows · lowers itself if frames dip — sharpness and smoothness in balance</small></button><button data-q="graphics"><span class="qn">Best Graphics</span><small>100% render scale · lowers itself if frames dip · biggest shadows, plus real moonlight shadows — sharpest picture, hardest on battery and heat</small></button>
       </div>
       <p class="nowLine" id="qNow">Now: Balanced (recommended) — 82% render scale</p>
     </div>
@@ -6056,8 +6056,8 @@ document.getElementById('perfBtn').addEventListener('click',function(){
 /* Graphics presets — ONE axis, low → high, exactly as the title menu
    now states them: Battery Saver (.5× base, 30 fps render cap, post
    pass off) / Performance (.62×) / Balanced (.82×) / Best Graphics
-   (1×, fixed — dynRes never touches it). Adaptive resolution rides on
-   top of Battery/Performance/Balanced: it starts at 0.65× of the
+   (1×). Adaptive resolution rides on top of ALL FOUR tiers (owner
+   decision 2026-11-05: safety net ON for Best Graphics too): it starts at 0.65× of the
    preset base and steps within 0.5–1.0× on a rolling frame-time
    average, DPR capped at 2; sustained overload at the floor
    latches a thermal 30 fps render cap rather than an unstable rate. */
@@ -6167,7 +6167,11 @@ document.getElementById('pauseQualityBtn').addEventListener('click',function(){
   toast('Graphics: '+QUALITY_NAME[S.quality]); });
 var fpsAcc=0,fpsN=0,fpsTimer=0,lowStreak=0;
 var _dynLastAdj=-99, _dynUpStreak=0; // FRAME PASS: applyQuality() reallocates the drawing buffer (setPixelRatio + resize) — a guaranteed one-frame hitch. The old thresholds (down at <42, up at >57, judged every 2.5 s) could ping-pong across a boundary and serve that hitch every few seconds forever: a periodic stutter with a regular heartbeat. Adjustments now need a 6 s spacing, and a raise needs TWO consecutive strong windows.
-function dynRes(dt){ if(S.quality==='graphics') return; fpsAcc+=dt; fpsN++; fpsTimer+=dt;
+// OWNER DECISION (2026-11-05 21:57 EST): the adaptive safety net is ON for
+// Best Graphics too — the old first-statement early return for 'graphics'
+// is gone. dynRes moves S.pixelScale ONLY; shadow sizes and textures stay
+// exactly as the tier table sets them.
+function dynRes(dt){ fpsAcc+=dt; fpsN++; fpsTimer+=dt;
   if(fpsTimer>2.5){ var avg=fpsN/fpsAcc; fpsTimer=0; fpsAcc=0; fpsN=0;
     var nowS2=performance.now()*.001, canAdj=nowS2-_dynLastAdj>6;
     if(avg<42&&S.pixelScale>.5){ _dynUpStreak=0;
